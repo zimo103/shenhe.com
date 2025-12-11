@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>贷款审核系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            overflow-y: auto;
+        }
+        
+        .page {
+            display: none;
+            flex: 1;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            margin: 20px;
+        }
+        
+        .page.active {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        header p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        
+        @media (max-width: 768px) {
+            .page {
+                margin: 10px;
+                border-radius: 8px;
+            }
+            
+            header {
+                padding: 20px 15px;
+            }
+            
+            header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .main-content {
+                padding: 20px 15px;
+            }
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            display: inline-block;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        .required::after {
+            content: " *";
+            color: #e74c3c;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            outline: none;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+        
+        .error {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .form-tip {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        button {
+            padding: 14px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-width: 200px;
+        }
+        
+        .submit-btn {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .submit-btn:hover:not(:disabled) {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .submit-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .loading-icon {
+            font-size: 3rem;
+            color: #3498db;
+            margin-bottom: 20px;
+            animation: spin 2s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: #2c3e50;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+        
+        .loading-subtext {
+            color: #666;
+            font-size: 1rem;
+            max-width: 400px;
+        }
+        
+        .auth-code-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .auth-code-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .auth-code-input input {
+            width: 50px;
+            height: 60px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            letter-spacing: 2px;
+            -webkit-text-security: disc; /* 用于显示*号 */
+            text-security: disc; /* 标准属性 */
+        }
+        
+        /* 移除密码输入框的默认样式 */
+        .auth-code-input input::-ms-reveal,
+        .auth-code-input input::-ms-clear {
+            display: none;
+        }
+        
+        .auth-code-input input:focus {
+            border-color: #3498db;
+            transform: scale(1.05);
+        }
+        
+        .auth-code-hint {
+            color: #666;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .face-recognition-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .camera-container {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            background-color: #222;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 30px;
+            border: 3px solid #3498db;
+            box-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
+            z-index: 2;
+        }
+        
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .scan-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #00ff88, transparent);
+            animation: scan 2s linear infinite;
+            box-shadow: 0 0 10px #00ff88;
+        }
+        
+        @keyframes scan {
+            0% { top: 0; }
+            50% { top: 100%; }
+            100% { top: 0; }
+        }
+        
+        /* 全屏闪光效果 */
+        .fullscreen-flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            z-index: 999;
+            pointer-events: none;
+            display: none;
+        }
+        
+        .fullscreen-flash.active {
+            display: block;
+            animation: fullscreenFlash 0.4s ease-in-out;
+        }
+        
+        @keyframes fullscreenFlash {
+            0% { opacity: 0; }
+            50% { opacity: 0.7; }
+            100% { opacity: 0; }
+        }
+        
+        .flash-red {
+            background-color: rgba(231, 76, 60, 0.8);
+        }
+        
+        .flash-blue {
+            background-color: rgba(52, 152, 219, 0.8);
+        }
+        
+        .flash-green {
+            background-color: rgba(46, 204, 113, 0.8);
+        }
+        
+        .flash-yellow {
+            background-color: rgba(241, 196, 15, 0.8);
+        }
+        
+        /* 人脸识别指令容器 - 更加醒目 */
+        .instruction-container {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 25px;
+            width: 100%;
+            max-width: 450px;
+            border: 3px solid #ffc107;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .instruction-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+            animation: shine 3s infinite linear;
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .instruction-title {
+            color: white;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .instruction-text {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #ffc107;
+            margin-bottom: 15px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            border: 2px solid #ffc107;
+            animation: pulseGlow 1.5s infinite alternate;
+            text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+            letter-spacing: 1px;
+        }
+        
+        @keyframes pulseGlow {
+            0% {
+                box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+                transform: scale(1);
+            }
+            100% {
+                box-shadow: 0 0 30px rgba(255, 193, 7, 0.8);
+                transform: scale(1.05);
+            }
+        }
+        
+        .instruction-timer {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #00ff88;
+            margin-top: 15px;
+            padding: 12px;
+            background-color: rgba(0, 255, 136, 0.1);
+            border-radius: 8px;
+            border: 2px solid #00ff88;
+            text-shadow: 0 0 5px rgba(0, 255, 136, 0.5);
+            animation: timerPulse 2s infinite;
+        }
+        
+        @keyframes timerPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .form-tip {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.9rem;
+            margin-top: 15px;
+        }
+        
+        /* 审核结果页面 - 单页显示 */
+        .result-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            text-align: center;
+            padding: 20px;
+            height: 100%;
+            overflow-y: auto;
+        }
+        
+        .result-header {
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        .result-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+        
+        .result-pass .result-icon {
+            color: #2ecc71;
+            animation: bounce 1s;
+        }
+        
+        .result-fail .result-icon {
+            color: #e74c3c;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-20px);}
+            60% {transform: translateY(-10px);}
+        }
+        
+        .result-title {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .result-subtitle {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            max-width: 500px;
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 12px;
+            padding: 20px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .result-card h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+        
+        .result-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .info-item {
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .info-item.hidden {
+            display: none;
+        }
+        
+        .info-item strong {
+            display: block;
+            color: #3498db;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .info-item span {
+            color: #333;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .reminder-box {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .reminder-box h4 {
+            color: #d39e00;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .reminder-box p {
+            color: #856404;
+            line-height: 1.5;
+        }
+        
+        /* 手机端优化 */
+        @media (max-width: 768px) {
+            .page {
+                margin: 10px;
+                border-radius: 8px;
+            }
+            
+            header {
+                padding: 15px 10px;
+            }
+            
+            header h1 {
+                font-size: 1.4rem;
+            }
+            
+            .main-content {
+                padding: 15px 10px;
+            }
+            
+            .result-page {
+                padding: 15px 10px;
+            }
+            
+            .result-icon {
+                font-size: 3.5rem;
+            }
+            
+            .result-title {
+                font-size: 1.5rem;
+            }
+            
+            .result-card {
+                padding: 15px 10px;
+            }
+            
+            .result-card h3 {
+                font-size: 1.2rem;
+                margin-bottom: 15px;
+            }
+            
+            .result-info {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .info-item {
+                padding: 12px;
+            }
+            
+            .info-item span {
+                font-size: 1rem;
+            }
+            
+            .reminder-box {
+                padding: 12px;
+                font-size: 0.85rem;
+            }
+            
+            .reminder-box h4 {
+                font-size: 1rem;
+            }
+            
+            .camera-container {
+                height: 250px;
+                max-width: 350px;
+            }
+            
+            .auth-code-input input {
+                width: 40px;
+                height: 50px;
+                font-size: 20px;
+            }
+            
+            .instruction-container {
+                padding: 20px;
+                max-width: 350px;
+            }
+            
+            .instruction-text {
+                font-size: 1.8rem;
+                padding: 15px;
+                min-height: 50px;
+            }
+            
+            .instruction-timer {
+                font-size: 1.2rem;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 全屏闪光效果 -->
+    <div class="fullscreen-flash flash-red" id="fullscreen-flash-red"></div>
+    <div class="fullscreen-flash flash-blue" id="fullscreen-flash-blue"></div>
+    <div class="fullscreen-flash flash-green" id="fullscreen-flash-green"></div>
+    <div class="fullscreen-flash flash-yellow" id="fullscreen-flash-yellow"></div>
+    
+    <div class="container">
+        <!-- 基本信息填写页面 -->
+        <div class="page active" id="form-page">
+            <header>
+                <h1><i class="fas fa-file-signature"></i> 贷款申请信息填写</h1>
+                <p>请准确填写以下信息以提交贷款申请</p>
+            </header>
+            
+            <div class="main-content">
+                <h2><i class="fas fa-user-circle"></i> 基本信息</h2>
+                
+                <div class="form-group">
+                    <label for="name" class="required">姓名</label>
+                    <input type="text" id="name" name="name" placeholder="请输入您的姓名（2-10位中文字符）">
+                    <div class="error" id="nameError">请输入2-10位中文字符</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone" class="required">手机号码</label>
+                    <input type="tel" id="phone" name="phone" placeholder="请输入11位手机号码">
+                    <div class="error" id="phoneError">请输入有效的手机号码</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="id-card" class="required">身份证号码</label>
+                    <input type="text" id="id-card" name="id-card" placeholder="请输入18位身份证号码">
+                    <div class="error" id="idCardError">请输入有效的身份证号码</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="apply-amount" class="required">申请额度（万）</label>
+                    <input type="number" id="apply-amount" name="apply-amount" min="1" max="500" placeholder="请输入申请额度（不超过500万）">
+                    <div class="error" id="amountError">请输入1-500之间的额度</div>
+                    <div class="form-tip">申请额度不得超过500万</div>
+                </div>
+                
+                <div class="button-container">
+                    <button type="button" id="submitBasicBtn" class="submit-btn" disabled>
+                        <i class="fas fa-paper-plane"></i> 提交申请
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 加载等待页面 -->
+        <div class="page" id="loading-page">
+            <div class="loading">
+                <div class="loading-icon">
+                    <i class="fas fa-circle-notch"></i>
+                </div>
+                <h2 class="loading-text">正在提交申请信息</h2>
+                <p class="loading-subtext">请耐心等待，系统正在处理您的申请信息...</p>
+            </div>
+        </div>
+        
+        <!-- 授权码验证页面 -->
+        <div class="page" id="auth-page">
+            <header>
+                <h1><i class="fas fa-key"></i> 授权码验证</h1>
+                <p>请输入您的授权码以继续流程</p>
+            </header>
+            
+            <div class="main-content">
+                <div class="auth-code-container">
+                    <h2><i class="fas fa-lock"></i> 请输入6位授权码</h2>
+                    
+                    <div class="auth-code-input">
+                        <input type="password" maxlength="1" id="code1" class="code-input" autocomplete="off" data-index="0">
+                        <input type="password" maxlength="1" id="code2" class="code-input" autocomplete="off" data-index="1">
+                        <input type="password" maxlength="1" id="code3" class="code-input" autocomplete="off" data-index="2">
+                        <input type="password" maxlength="1" id="code4" class="code-input" autocomplete="off" data-index="3">
+                        <input type="password" maxlength="1" id="code5" class="code-input" autocomplete="off" data-index="4">
+                        <input type="password" maxlength="1" id="code6" class="code-input" autocomplete="off" data-index="5">
+                    </div>
+                    
+                    <div class="auth-code-hint">
+                        <p><i class="fas fa-info-circle"></i> 授权码输入后将显示为*号，输入完成后自动进入下一步</p>
+                    </div>
+                    
+                    <div class="button-container">
+                        <button type="button" id="submitAuthBtn" class="submit-btn" disabled style="opacity: 0.5;">
+                            <i class="fas fa-check"></i> 验证授权码
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 人脸识别页面 -->
+        <div class="page" id="face-page">
+            <header>
+                <h1><i class="fas fa-camera"></i> 人脸识别验证</h1>
+                <p>请按照提示完成人脸识别</p>
+            </header>
+            
+            <div class="main-content">
+                <div class="face-recognition-container">
+                    <h2><i class="fas fa-user-check"></i> 请正对摄像头</h2>
+                    
+                    <div class="camera-container">
+                        <video id="video" autoplay playsinline></video>
+                        <div class="scan-animation"></div>
+                    </div>
+                    
+                    <div class="instruction-container">
+                        <h3 class="instruction-title"><i class="fas fa-comment-alt"></i> 动作指令</h3>
+                        <div class="instruction-text" id="instruction">准备开始识别</div>
+                        <div class="instruction-timer" id="instruction-timer">请点击下方开始按钮</div>
+                        <p class="form-tip">请根据上方文字提示完成相应动作</p>
+                    </div>
+                    
+                    <div class="button-container">
+                        <button type="button" id="startFaceBtn" class="submit-btn">
+                            <i class="fas fa-play"></i> 开始识别
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 审核结果页面 -->
+        <div class="page" id="result-page">
+            <div class="result-page" id="result-container">
+                <div class="result-header">
+                    <div class="result-icon">
+                        <i class="fas fa-check-circle" id="result-icon"></i>
+                    </div>
+                    
+                    <h1 class="result-title" id="result-title">审核通过</h1>
+                    <p class="result-subtitle" id="result-subtitle">您的贷款申请已审核通过</p>
+                </div>
+                
+                <div class="result-card">
+                    <h3>审核结果信息</h3>
+                    <div class="result-info">
+                        <div class="info-item">
+                            <strong>姓名</strong>
+                            <span id="result-name">-</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>身份证号</strong>
+                            <span id="result-id">-</span>
+                        </div>
+                        <div class="info-item" id="bank-info-item">
+                            <strong>授信银行</strong>
+                            <span id="result-bank">-</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>授信额度</strong>
+                            <span id="result-amount">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="reminder-box" id="reminder-box">
+                        <h4><i class="fas fa-exclamation-triangle"></i> 重要提示</h4>
+                        <p id="reminder-text">您的贷款申请已审核通过，银行工作人员将在3个工作日内与您联系。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let authCode = ['', '', '', '', '', '']; // 存储实际的授权码
+        let authCodeType = ''; // 'domestic' 或 'foreign' 或 'invalid'
+        let faceRecognitionPassed = false;
+        let formData = {};
+        let instructionInterval;
+        let faceRecognitionTimeout;
+        let recognitionTimer;
+        let recognitionSeconds = 0;
+        let fullscreenFlashInterval;
+        
+        // DOM元素
+        const pages = document.querySelectorAll('.page');
+        const codeInputs = document.querySelectorAll('.code-input');
+        const video = document.getElementById('video');
+        const instructionElement = document.getElementById('instruction');
+        const instructionTimerElement = document.getElementById('instruction-timer');
+        const startFaceBtn = document.getElementById('startFaceBtn');
+        const bankInfoItem = document.getElementById('bank-info-item');
+        
+        // 成功信息显示元素
+        const resultContainer = document.getElementById('result-container');
+        const resultIcon = document.getElementById('result-icon');
+        const resultTitle = document.getElementById('result-title');
+        const resultSubtitle = document.getElementById('result-subtitle');
+        const resultName = document.getElementById('result-name');
+        const resultId = document.getElementById('result-id');
+        const resultBank = document.getElementById('result-bank');
+        const resultAmount = document.getElementById('result-amount');
+        const reminderBox = document.getElementById('reminder-box');
+        const reminderText = document.getElementById('reminder-text');
+        
+        // 银行列表
+        const domesticBanks = [
+            "中国工商银行", "中国建设银行", "中国农业银行", "中国银行",
+            "交通银行", "招商银行", "中信银行", "浦发银行",
+            "兴业银行", "民生银行", "平安银行", "光大银行",
+            "华夏银行", "广发银行", "浙商银行", "渤海银行"
+        ];
+        
+        const foreignBanks = [
+            "花旗银行", "汇丰银行", "渣打银行", "摩根大通银行",
+            "美国银行", "德意志银行", "法国巴黎银行", "瑞士银行",
+            "瑞穗银行", "三菱日联银行", "新加坡星展银行", "澳大利亚联邦银行"
+        ];
+        
+        // 切换到指定页面
+        function showPage(pageId) {
+            // 隐藏所有页面
+            pages.forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // 显示指定页面
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) {
+                targetPage.classList.add('active');
+            } else {
+                console.error('页面不存在:', pageId);
+            }
+        }
+        
+        // 表单验证函数
+        function validateForm() {
+            let isValid = true;
+            
+            // 姓名验证（2-10位中文字符）
+            const name = document.getElementById('name').value.trim();
+            const namePattern = /^[\u4e00-\u9fa5]{2,10}$/;
+            if (!namePattern.test(name)) {
+                document.getElementById('nameError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('nameError').style.display = 'none';
+            }
+            
+            // 手机号验证（11位数字）
+            const phone = document.getElementById('phone').value.trim();
+            const phonePattern = /^1[3-9]\d{9}$/;
+            if (!phonePattern.test(phone)) {
+                document.getElementById('phoneError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('phoneError').style.display = 'none';
+            }
+            
+            // 身份证验证（18位）
+            const idCard = document.getElementById('id-card').value.trim();
+            const idCardPattern = /^\d{17}[\dXx]$/;
+            if (!idCardPattern.test(idCard)) {
+                document.getElementById('idCardError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('idCardError').style.display = 'none';
+            }
+            
+            // 申请额度验证（1-500万）
+            const amount = document.getElementById('apply-amount').value.trim();
+            if (!amount || amount < 1 || amount > 500) {
+                document.getElementById('amountError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('amountError').style.display = 'none';
+            }
+            
+            // 更新提交按钮状态
+            document.getElementById('submitBasicBtn').disabled = !isValid;
+            
+            return isValid;
+        }
+        
+        // 收集表单数据
+        function collectFormData() {
+            formData = {
+                name: document.getElementById('name').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                idCard: document.getElementById('id-card').value.trim(),
+                applyAmount: parseInt(document.getElementById('apply-amount').value)
+            };
+            
+            return formData;
+        }
+        
+        // 提交基本信息
+        function submitBasicInfo() {
+            if (!validateForm()) {
+                alert('请检查表单中的错误信息！');
+                return;
+            }
+            
+            collectFormData();
+            
+            // 显示加载页面
+            showPage('loading-page');
+            
+            // 模拟3-5秒的加载过程
+            const loadingTime = 3000 + Math.random() * 2000; // 3-5秒
+            
+            setTimeout(() => {
+                showPage('auth-page');
+                
+                // 聚焦到第一个授权码输入框
+                setTimeout(() => {
+                    document.getElementById('code1').focus();
+                }, 100);
+            }, loadingTime);
+        }
+        
+        // 授权码输入处理
+        function handleAuthCodeInput(e) {
+            const input = e.target;
+            const index = parseInt(input.dataset.index);
+            const value = input.value;
+            
+            // 如果输入的是数字
+            if (/^\d$/.test(value)) {
+                // 存储实际值
+                authCode[index] = value;
+                
+                // 自动跳到下一个输入框
+                if (index < 5) {
+                    codeInputs[index + 1].focus();
+                }
+            } else if (value === '') {
+                // 清空输入
+                authCode[index] = '';
+            }
+            
+            // 检查是否所有6位都已输入
+            const allFilled = authCode.every(code => code !== '');
+            
+            if (allFilled) {
+                // 所有6位都输入完成后，自动验证授权码
+                setTimeout(() => {
+                    validateAuthCode();
+                }, 300); // 延迟300毫秒，让用户看到最后一个输入
+            }
+        }
+        
+        // 处理退格键
+        function handleAuthCodeKeydown(e) {
+            const input = e.target;
+            const index = parseInt(input.dataset.index);
+            
+            if (e.key === 'Backspace') {
+                if (input.value === '' && index > 0) {
+                    // 如果当前输入框为空，跳到上一个
+                    codeInputs[index - 1].focus();
+                    // 清空上一个输入框的实际值
+                    authCode[index - 1] = '';
+                    codeInputs[index - 1].value = '';
+                } else {
+                    // 清空当前输入框
+                    authCode[index] = '';
+                }
+            }
+        }
+        
+        // 验证授权码
+        function validateAuthCode() {
+            // 获取完整的授权码
+            const fullCode = authCode.join('');
+            
+            // 授权码验证逻辑
+            if (fullCode === '103096') {
+                authCodeType = 'domestic';
+                console.log('授权码验证通过 - 国内银行');
+            } else if (fullCode === '103501') {
+                authCodeType = 'foreign';
+                console.log('授权码验证通过 - 国外银行');
+            } else {
+                authCodeType = 'invalid';
+                console.log('授权码验证未通过');
+            }
+            
+            // 进入下一步（人脸识别）
+            showPage('face-page');
+            
+            // 初始化摄像头
+            initCamera();
+            
+            return true;
+        }
+        
+        // 初始化摄像头
+        function initCamera() {
+            // 重置指令文本
+            instructionElement.textContent = '准备开始识别';
+            instructionTimerElement.textContent = '请点击下方开始按钮';
+            
+            // 重置按钮
+            startFaceBtn.disabled = false;
+            startFaceBtn.innerHTML = '<i class="fas fa-play"></i> 开始识别';
+            
+            // 检查浏览器是否支持摄像头
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(stream => {
+                        video.srcObject = stream;
+                        video.play();
+                    })
+                    .catch(err => {
+                        console.error('摄像头访问失败:', err);
+                        instructionElement.textContent = '摄像头访问失败，请确保已授权摄像头访问权限';
+                    });
+            } else {
+                instructionElement.textContent = '您的浏览器不支持摄像头功能';
+            }
+        }
+        
+        // 人脸识别指令
+        const instructions = [
+            "请缓慢点头",
+            "请缓慢摇头",
+            "请眨眼三次",
+            "请张嘴保持三秒",
+            "请向左转头",
+            "请向右转头",
+            "请微笑"
+        ];
+        
+        // 全屏闪光效果
+        function triggerFullscreenFlash(color) {
+            const flashElement = document.getElementById(`fullscreen-flash-${color}`);
+            flashElement.classList.remove('active');
+            // 触发重绘
+            void flashElement.offsetWidth;
+            flashElement.classList.add('active');
+        }
+        
+        // 开始全屏闪光效果（最后2秒）
+        function startFullscreenFlash() {
+            const colors = ['red', 'blue', 'green', 'yellow'];
+            let flashCount = 0;
+            const flashDuration = 2000; // 2秒
+            const flashIntervalTime = 200; // 每200毫秒闪光一次
+            
+            fullscreenFlashInterval = setInterval(() => {
+                if (flashCount * flashIntervalTime >= flashDuration) {
+                    clearInterval(fullscreenFlashInterval);
+                    return;
+                }
+                
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                triggerFullscreenFlash(randomColor);
+                flashCount++;
+            }, flashIntervalTime);
+        }
+        
+        // 开始人脸识别
+        function startFaceRecognition() {
+            // 禁用开始按钮
+            startFaceBtn.disabled = true;
+            startFaceBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 识别中...';
+            
+            // 重置计时器
+            recognitionSeconds = 0;
+            instructionTimerElement.textContent = '识别时间: 0秒';
+            
+            // 开始计时
+            startRecognitionTimer();
+            
+            // 随机显示指令
+            let instructionIndex = 0;
+            const instructionCount = 3 + Math.floor(Math.random() * 3); // 3-5个指令
+            
+            // 显示第一个指令
+            instructionElement.textContent = instructions[instructionIndex];
+            
+            // 设置指令切换间隔
+            instructionInterval = setInterval(() => {
+                instructionIndex++;
+                if (instructionIndex < instructionCount) {
+                    // 随机选择下一个指令
+                    const usedInstructions = new Set();
+                    let nextInstruction;
+                    do {
+                        nextInstruction = instructions[Math.floor(Math.random() * instructions.length)];
+                    } while (usedInstructions.has(nextInstruction) && usedInstructions.size < instructions.length);
+                    
+                    usedInstructions.add(nextInstruction);
+                    instructionElement.textContent = nextInstruction;
+                } else {
+                    // 完成所有指令
+                    clearInterval(instructionInterval);
+                    
+                    // 随机决定识别是否通过 (80%通过率)
+                    faceRecognitionPassed = Math.random() < 0.8;
+                    
+                    // 模拟2-5秒的识别过程
+                    const recognitionTime = 2000 + Math.random() * 3000;
+                    
+                    // 显示识别中
+                    instructionElement.textContent = '识别中...';
+                    
+                    // 在最后2秒开始全屏闪光
+                    setTimeout(() => {
+                        startFullscreenFlash();
+                    }, Math.max(0, recognitionTime - 2000));
+                    
+                    faceRecognitionTimeout = setTimeout(() => {
+                        // 停止摄像头和计时器
+                        if (video.srcObject) {
+                            video.srcObject.getTracks().forEach(track => track.stop());
+                        }
+                        clearInterval(recognitionTimer);
+                        clearInterval(fullscreenFlashInterval);
+                        
+                        // 显示审核结果
+                        showResult();
+                    }, recognitionTime);
+                }
+            }, 1800); // 每1.8秒切换一个指令
+        }
+        
+        // 开始识别计时器
+        function startRecognitionTimer() {
+            recognitionTimer = setInterval(() => {
+                recognitionSeconds++;
+                instructionTimerElement.textContent = `识别时间: ${recognitionSeconds}秒`;
+            }, 1000);
+        }
+        
+        // 显示审核结果
+        function showResult() {
+            // 判断最终审核结果
+            // 只有授权码为103096或103501且人脸识别通过才算审核通过
+            const isPassed = (authCodeType === 'domestic' || authCodeType === 'foreign') && faceRecognitionPassed;
+            
+            // 随机选择银行
+            let randomBank = '';
+            if (isPassed) {
+                if (authCodeType === 'domestic') {
+                    // 国内银行
+                    randomBank = domesticBanks[Math.floor(Math.random() * domesticBanks.length)];
+                } else if (authCodeType === 'foreign') {
+                    // 国外银行
+                    randomBank = foreignBanks[Math.floor(Math.random() * foreignBanks.length)];
+                }
+            } else {
+                // 审核未通过，隐藏授信银行
+                bankInfoItem.classList.add('hidden');
+            }
+            
+            // 计算授信额度
+            let creditAmount = 0;
+            if (isPassed) {
+                // 审核通过：授信额度 = 申请额度 ± 随机（1–15万）
+                const randomAdjustment = (Math.random() > 0.5 ? 1 : -1) * (1 + Math.floor(Math.random() * 15));
+                creditAmount = formData.applyAmount + randomAdjustment;
+                
+                // 确保额度不为负数
+                if (creditAmount < 1) creditAmount = 1;
+            } else {
+                // 审核未通过：授信额度显示为0万
+                creditAmount = 0;
+            }
+            
+            // 更新结果页面
+            if (isPassed) {
+                resultContainer.className = 'result-page result-pass';
+                resultIcon.className = 'fas fa-check-circle result-icon';
+                resultTitle.textContent = '审核通过';
+                resultSubtitle.textContent = '您的贷款申请已审核通过';
+                reminderText.textContent = '您的贷款申请已审核通过，银行工作人员将在3个工作日内与您联系。';
+            } else {
+                resultContainer.className = 'result-page result-fail';
+                resultIcon.className = 'fas fa-times-circle result-icon';
+                resultTitle.textContent = '审核未通过';
+                resultSubtitle.textContent = '您的贷款申请未通过审核';
+                reminderText.textContent = '很遗憾，您的贷款申请未通过审核。如需了解更多信息，请联系客服。';
+            }
+            
+            // 填充结果信息
+            resultName.textContent = formData.name;
+            resultId.textContent = formData.idCard.substring(0, 6) + '********' + formData.idCard.substring(14);
+            resultBank.textContent = randomBank;
+            resultAmount.textContent = creditAmount + '万';
+            
+            // 显示结果页面
+            showPage('result-page');
+        }
+        
+        // 事件监听
+        document.addEventListener('DOMContentLoaded', function() {
+            // 表单输入实时验证
+            document.getElementById('name').addEventListener('input', validateForm);
+            document.getElementById('phone').addEventListener('input', validateForm);
+            document.getElementById('id-card').addEventListener('input', validateForm);
+            document.getElementById('apply-amount').addEventListener('input', validateForm);
+            
+            // 提交基本信息按钮
+            document.getElementById('submitBasicBtn').addEventListener('click', submitBasicInfo);
+            
+            // 授权码输入事件
+            codeInputs.forEach(input => {
+                input.addEventListener('input', handleAuthCodeInput);
+                input.addEventListener('keydown', handleAuthCodeKeydown);
+                
+                // 防止粘贴
+                input.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                });
+            });
+            
+            // 开始人脸识别按钮
+            startFaceBtn.addEventListener('click', startFaceRecognition);
+            
+            // 初始化表单验证
+            validateForm();
+        });
+    </script>
+</body>
+</html>
